@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.BoolRes;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
@@ -35,28 +36,46 @@ public class MainActivity extends Activity {
     private static final String masterFile = "data_V15MD.db";
     private static final String sourceDir = "Download/training";
     private static final String targetDir = "MovilizerDBImport";
+    private static final String dsdDir = "dsd";
+    private static final String fsvDir = "fsv";
 
     private static String appId, apkFile;
 
-    Button installButton, uninstallButton;
-    TextView textView1, textView2, textView3;
+    Button installDSDButton, installFSVButton, uninstallButton;
+    TextView textView1, textView2, textView3, textView4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        installButton = (Button) findViewById(R.id.button_install);
+        installDSDButton = (Button) findViewById(R.id.button_install_dsd);
+        installFSVButton = (Button) findViewById(R.id.button_install_fsv);
         uninstallButton = (Button) findViewById(R.id.button_uninstall);
         textView1 = (TextView) findViewById(R.id.textView1);
         textView2 = (TextView) findViewById(R.id.textView2);
         textView3 = (TextView) findViewById(R.id.textView3);
+        textView4 = (TextView) findViewById(R.id.textView4);
 
-        installButton.setOnClickListener( new View.OnClickListener() {
+        installDSDButton.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 read_config();
-                copyFiles();
+                copyFiles(dsdDir);
+
+                File file = new File(apkFile);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
+                startActivity(intent);
+
+            }
+        });
+
+        installFSVButton.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                read_config();
+                copyFiles(fsvDir);
 
                 File file = new File(apkFile);
                 Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -76,12 +95,15 @@ public class MainActivity extends Activity {
             }
         });
 
-        verifyStoragePermissions(this);
-        read_config();
-
-        if (appId.length() > 0 && apkFile.length() > 0) {
-            installButton.setEnabled(true);
-            uninstallButton.setEnabled(true);
+        if (verifyStoragePermissions(this)) {
+            read_config();
+            if (appId.length() > 0 && apkFile.length() > 0) {
+                installDSDButton.setEnabled(true);
+                installFSVButton.setEnabled(true);
+                uninstallButton.setEnabled(true);
+            }
+        } else {
+            textView4.setText("please grant requested permissions and restart app");
         }
     }
 
@@ -119,7 +141,7 @@ public class MainActivity extends Activity {
         textView3.setText(apkFile);
     }
 
-    private void copyFiles() {
+    private void copyFiles(String sourcePathExt) {
         String sourceFilePath, targetFilePath;
         File targetDirF = new File(Environment.getExternalStorageDirectory().getPath() + "/" + targetDir);
         if (!targetDirF.exists()) {
@@ -131,11 +153,11 @@ public class MainActivity extends Activity {
                 return;
             }
         }
-        sourceFilePath = Environment.getExternalStorageDirectory().getPath() + "/" + sourceDir + "/" + transFile;
+        sourceFilePath = Environment.getExternalStorageDirectory().getPath() + "/" + sourceDir + "/" + sourcePathExt + "/" + transFile;
         targetFilePath = Environment.getExternalStorageDirectory().getPath() + "/" + targetDir + "/" + transFile;
         File sourceFile1 = new File(sourceFilePath);
         File targetFile1 = new File(targetFilePath);
-        sourceFilePath = Environment.getExternalStorageDirectory().getPath() + "/" + sourceDir + "/" + masterFile;
+        sourceFilePath = Environment.getExternalStorageDirectory().getPath() + "/" + sourceDir + "/" + sourcePathExt + "/" + masterFile;
         targetFilePath = Environment.getExternalStorageDirectory().getPath() + "/" + targetDir + "/" + masterFile;
         File sourceFile2 = new File(sourceFilePath);
         File targetFile2 = new File(targetFilePath);
@@ -147,15 +169,18 @@ public class MainActivity extends Activity {
         }
     }
 
-    public static void verifyStoragePermissions(Activity activity) {
+    public static boolean verifyStoragePermissions(Activity activity) {
+        boolean ret = true;
         int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permission != PackageManager.PERMISSION_GRANTED) {
+            ret = false;
             ActivityCompat.requestPermissions(
                     activity,
                     PERMISSIONS_STORAGE,
                     REQUEST_EXTERNAL_STORAGE
             );
         }
+        return ret;
     }
 
     public static void copyFile(File sourceFile, File destFile) throws IOException {

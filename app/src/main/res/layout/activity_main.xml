@@ -69,10 +69,30 @@
         android:layout_height="38dp" />
 
     <Button
-        android:id="@+id/button_install"
+        android:id="@+id/button_install_dsd"
         android:layout_width="331dp"
         android:layout_height="38dp"
-        android:text="Install"
+        android:text="Install DSD"
         android:enabled="false" />
 
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="38dp" />
+
+    <Button
+        android:id="@+id/button_install_fsv"
+        android:layout_width="331dp"
+        android:layout_height="38dp"
+        android:text="Install FSV"
+        android:enabled="false" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="38dp" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold" />
 </LinearLayout>
